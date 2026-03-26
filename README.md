@@ -5,6 +5,8 @@
 - Frontend: React + Vite + TailwindCSS.
 - Mô hình: `weights/YOLO26m` và `weights/YOLO26n` (với file `.pt` và `.onnx`).
 
+**Dataset:** [Waste Detection Dataset on Roboflow](https://app.roboflow.com/wastedetection-1zidy/waste-detection-vqkjo-dkcrc/3)
+
 ## 1. Yêu cầu hệ thống
 
 - Python 3.10+
