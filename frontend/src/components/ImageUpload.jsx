@@ -69,7 +69,7 @@ export default function ImageUpload({ model, onDetections }) {
         <p className="text-slate-300 font-medium text-sm">
           {dragging ? 'Drop to detect' : 'Drag & drop or click to upload'}
         </p>
-        <p className="text-slate-500 text-xs mt-1">PNG, JPG, JPEG supported</p>
+        <p className="text-slate-500 text-xs mt-1">PNG, JPG, JPEG,... supported</p>
       </div>
 
       {error && (

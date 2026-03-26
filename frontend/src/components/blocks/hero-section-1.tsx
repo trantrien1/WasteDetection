@@ -84,7 +84,7 @@ export function HeroSection() {
                     className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950"
                   >
                     <span className="text-foreground text-sm">
-                      Powered by YOLOv8 — YOLO26m &amp; YOLO26n models available
+                      Powered by YOLO &amp; YOLO26n models available
                     </span>
                     <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700" />
                     <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
@@ -168,13 +168,13 @@ export function HeroSection() {
                       <WasteCategoryCard
                         icon={<Recycle className="size-6" />}
                         label="Recyclable"
-                        items={['5,679 samples']}
+                        items={['5,758 samples']}
                         color="emerald"
                       />
                       <WasteCategoryCard
                         icon={<Trash2 className="size-6" />}
                         label="Non-Recyclable"
-                        items={['5,762 samples']}
+                        items={['5,980 samples']}
                         color="blue"
                       />
                       <WasteCategoryCard
@@ -211,13 +211,13 @@ export function HeroSection() {
                 Detection Capabilities
               </p>
               <h2 className="text-3xl font-bold text-foreground">
-                5 detection classes. 19,602 training samples.
+                5 detection classes. 12,158 training samples.
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
               {[
                 {
-                  value: '5,679',
+                  value: '5,758',
                   label: 'Recyclable',
                   desc: 'Training samples',
                   color: 'text-emerald-400',
@@ -225,7 +225,7 @@ export function HeroSection() {
                   bg: 'bg-emerald-500/5',
                 },
                 {
-                  value: '5,762',
+                  value: '5,980',
                   label: 'Non-Recyclable',
                   desc: 'Training samples',
                   color: 'text-blue-400',
