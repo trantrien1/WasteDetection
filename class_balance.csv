@@ -1,0 +1,6 @@
+Class Name,Total Count,Training Count,Validation Count,Test Count
+Non-Recyclable,5762,4203,971,588
+Recyclable,5679,4187,951,541
+Hazardous,3610,2607,651,352
+Other_Waste,2440,1838,386,216
+Medical_Textile,2111,1585,339,187
