@@ -70,7 +70,13 @@
 3. Xem kết quả *detections* và ảnh gắn nhãn.
 
 
-## 6. Ghi chú
+## 6. Hình ảnh minh họa
+
+Dưới đây là sơ đồ luồng hệ thống và cách các thành phần tương tác:
+
+![Waste Detection Architecture](./assets/waste-detection.png)
+
+## 7. Ghi chú
 
 - `weights` nặng; nếu chưa có, tải model YOLO phù hợp (hoặc tự train).
 - Đảm bảo backend được chạy khi dùng frontend.
