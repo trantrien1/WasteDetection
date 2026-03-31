@@ -1,18 +1,15 @@
 {
   "buildCommand": "cd frontend && npm run build",
   "outputDirectory": "frontend/dist",
-  "env": {
-    "PYTHON_VERSION": "3.10"
-  },
   "functions": {
-    "api/**/*.py": {
+    "api/**.py": {
       "runtime": "python3.10"
     }
   },
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "/api/:path*.py"
+      "destination": "/api/:path*"
     }
   ]
 }
