@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import math
 from concurrent.futures import ThreadPoolExecutor
 
 import cv2
@@ -21,6 +22,30 @@ app.add_middleware(
 
 _detectors: dict[str, WasteDetector] = {}
 _executor = ThreadPoolExecutor(max_workers=2)
+
+
+def get_capture_fps(cap: cv2.VideoCapture) -> float | None:
+    fps = float(cap.get(cv2.CAP_PROP_FPS) or 0)
+    if not math.isfinite(fps) or fps <= 0:
+        return None
+    return round(fps, 2)
+
+
+class FpsTracker:
+    def __init__(self):
+        self.previous_timestamp: float | None = None
+
+    def update(self, timestamp: float) -> float | None:
+        if self.previous_timestamp is None:
+            self.previous_timestamp = timestamp
+            return None
+
+        elapsed = timestamp - self.previous_timestamp
+        self.previous_timestamp = timestamp
+        if elapsed <= 0:
+            return None
+
+        return round(1 / elapsed, 2)
 
 
 def get_detector(model_name: str) -> WasteDetector:
@@ -72,9 +97,13 @@ async def video_stream(websocket: WebSocket, model: str = settings.DEFAULT_MODEL
         await websocket.close()
         return
 
+    source_fps = get_capture_fps(cap)
+    frame_interval = 1 / source_fps if source_fps else None
+    fps_tracker = FpsTracker()
     loop = asyncio.get_event_loop()
     try:
         while True:
+            frame_started_at = loop.time()
             ret, frame = cap.read()
             if not ret:
                 await websocket.send_json({"error": "Failed to read frame"})
@@ -85,11 +114,17 @@ async def video_stream(websocket: WebSocket, model: str = settings.DEFAULT_MODEL
             )
 
             _, buf = cv2.imencode(".jpg", annotated, [cv2.IMWRITE_JPEG_QUALITY, 80])
+            stream_fps = fps_tracker.update(loop.time())
             await websocket.send_json({
                 "frame": base64.b64encode(buf).decode(),
                 "detections": detections,
+                "fps": stream_fps,
+                "source_fps": source_fps,
             })
-            await asyncio.sleep(0.033)  # ~30 FPS
+            if frame_interval:
+                sleep_for = frame_interval - (loop.time() - frame_started_at)
+                if sleep_for > 0:
+                    await asyncio.sleep(sleep_for)
     except WebSocketDisconnect:
         pass
     finally:

@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import torch
 from ultralytics import YOLO
 
 import settings
@@ -12,14 +13,22 @@ def classify_waste(class_name: str) -> str:
 
 class WasteDetector:
     def __init__(self, model_path: str):
+        self.device = self._select_device()
         self.model = YOLO(model_path)
+        print(f"Using YOLO device: {self.device}")
+
+    @staticmethod
+    def _select_device() -> str:
+        configured_device = settings.INFERENCE_DEVICE.strip().lower()
+        if configured_device != "auto":
+            return configured_device
+        return "cuda:0" if torch.cuda.is_available() else "cpu"
 
     def detect(self, frame: np.ndarray) -> tuple[np.ndarray, list[dict]]:
-        resized = cv2.resize(frame, (640, 360))
-        results = self.model.predict(resized, conf=0.6, verbose=False)
+        results = self.model.predict(frame, conf=0.6, device=self.device, verbose=False)
 
         detections = []
-        annotated = resized
+        annotated = frame
 
         for result in results:
             annotated = result.plot()

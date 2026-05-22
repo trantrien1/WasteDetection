@@ -84,7 +84,7 @@ export function HeroSection() {
                     className="hover:bg-background dark:hover:border-t-border bg-muted group mx-auto flex w-fit items-center gap-4 rounded-full border p-1 pl-4 shadow-md shadow-black/5 transition-all duration-300 dark:border-t-white/5 dark:shadow-zinc-950"
                   >
                     <span className="text-foreground text-sm">
-                      Powered by YOLO &amp; YOLO26n models available
+                      Powered by YOLO models available
                     </span>
                     <span className="dark:border-background block h-4 w-0.5 border-l bg-white dark:bg-zinc-700" />
                     <div className="bg-background group-hover:bg-muted size-6 overflow-hidden rounded-full duration-500">
@@ -106,7 +106,7 @@ export function HeroSection() {
 
                   {/* Description */}
                   <p className="mx-auto mt-8 max-w-2xl text-balance text-lg text-muted-foreground">
-                    Real-time waste classification using YOLOv8. Point your camera or upload an
+                    Real-time waste classification using YOLO. Point your camera or upload an
                     image — instantly identify recyclable, non-recyclable, and hazardous materials.
                   </p>
                 </AnimatedGroup>
@@ -369,7 +369,7 @@ const HeroHeader = () => {
           className={cn(
             'mx-auto mt-2 max-w-6xl px-6 transition-all duration-300 lg:px-12',
             isScrolled &&
-              'bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5',
+            'bg-background/50 max-w-4xl rounded-2xl border backdrop-blur-lg lg:px-5',
           )}
         >
           <div className="relative flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">

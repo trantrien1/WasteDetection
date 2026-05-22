@@ -9,6 +9,7 @@ export default function VideoStream({ model, onDetections, isActive }) {
   const [status, setStatus] = useState('disconnected');
   const [error, setError] = useState(null);
   const [hasFrame, setHasFrame] = useState(false);
+  const [fps, setFps] = useState(null);
 
   useEffect(() => {
     if (!isActive) {
@@ -17,6 +18,7 @@ export default function VideoStream({ model, onDetections, isActive }) {
       hasFrameRef.current = false;
       setStatus('disconnected');
       setHasFrame(false);
+      setFps(null);
       return;
     }
 
@@ -24,6 +26,7 @@ export default function VideoStream({ model, onDetections, isActive }) {
     setError(null);
     hasFrameRef.current = false;
     setHasFrame(false);
+    setFps(null);
 
     const ws = new WebSocket(`${WS_BASE}/ws/video?model=${model}`);
     wsRef.current = ws;
@@ -45,6 +48,11 @@ export default function VideoStream({ model, onDetections, isActive }) {
           hasFrameRef.current = true;
           setHasFrame(true);
         }
+      }
+
+      if ('fps' in data) {
+        const nextFps = Number(data.fps);
+        setFps(Number.isFinite(nextFps) && nextFps > 0 ? nextFps : null);
       }
 
       if (data.detections) {
@@ -79,6 +87,10 @@ export default function VideoStream({ model, onDetections, isActive }) {
     disconnected: 'text-slate-400 bg-slate-700/50 border-slate-600/30',
   };
 
+  const fpsLabel = fps
+    ? `${Number.isInteger(fps) ? fps : fps.toFixed(2).replace(/\.?0+$/, '')} FPS`
+    : 'FPS unavailable';
+
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -86,7 +98,7 @@ export default function VideoStream({ model, onDetections, isActive }) {
           {status}
         </span>
         {status === 'connected' && (
-          <span className="text-xs text-slate-500">~30 FPS</span>
+          <span className="text-xs text-slate-500">{fpsLabel}</span>
         )}
       </div>
 

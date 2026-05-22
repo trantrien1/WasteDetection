@@ -1,9 +1,10 @@
 # Waste Detection (YOLO)
 
-Ứng dụng phát hiện rác thải (waste detection) với model YOLO, gồm:
-- Backend: FastAPI (Python), nhận ảnh và stream webcam.
-- Frontend: React + Vite + TailwindCSS.
-- Mô hình: `weights/YOLO26m` và `weights/YOLO26n` (với file `.pt` và `.onnx`).
+Ứng dụng phát hiện và phân loại rác thải bằng YOLO, gồm backend FastAPI và frontend React.
+
+- Backend: FastAPI, OpenCV, Ultralytics YOLO, xử lý ảnh upload và stream webcam qua WebSocket.
+- Frontend: React + Vite + TailwindCSS, hiển thị live camera, kết quả detection và FPS thực tế.
+- Mô hình: tự động nhận các model có trong `weights/YOLO26x`, `weights/YOLO26m`, `weights/YOLO26s`, `weights/YOLO26n`.
 
 **Dataset:** [Waste Detection Dataset on Roboflow](https://app.roboflow.com/wastedetection-1zidy/waste-detection-vqkjo-dkcrc/3)
 
@@ -11,72 +12,129 @@
 
 - Python 3.10+
 - Node.js 18+
-- GPU và CUDA nếu dùng mô hình PyTorch với tăng tốc (tùy thiết lập `WasteDetector`).
+- Webcam nếu dùng chế độ live camera.
+- GPU NVIDIA là tùy chọn, nhưng được khuyến nghị nếu muốn tăng tốc inference.
 
 ## 2. Cài đặt Backend
 
-1. Mở terminal trong `backend/`:
-   ```bash
-   cd backend
-   python -m venv .venv
-   .venv\Scripts\activate   # Windows
-   # source .venv/bin/activate  # macOS/Linux
-   pip install --upgrade pip
-   pip install -r requirements.txt
-   ```
+Mở terminal tại thư mục gốc project:
 
-2. Chỉnh `settings.py` nếu bạn muốn model mặc định, đường dẫn webcam, hay cấu hình khác.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+python -m pip install --upgrade pip
+python -m pip install -r backend\requirements.txt
+```
 
-3. Chạy backend:
-   ```bash
-   uvicorn main:app --reload --port 8000
-   ```
+Nếu muốn chạy bằng GPU NVIDIA, cài PyTorch bản CUDA vào đúng `.venv`:
+
+```powershell
+python -m pip install --upgrade --force-reinstall torch torchvision --index-url https://download.pytorch.org/whl/cu130
+```
+
+Kiểm tra CUDA:
+
+```powershell
+python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU')"
+```
+
+Chạy backend:
+
+```powershell
+cd backend
+python -m uvicorn main:app --reload --port 8000
+```
+
+Khi model được load, backend sẽ in thiết bị đang dùng, ví dụ:
+
+```text
+Using YOLO device: cuda:0
+```
 
 ## 3. Cài đặt Frontend
 
-1. Mở terminal trong `frontend/`:
-   ```bash
-   cd frontend
-   npm install
-   ```
+Mở terminal tại thư mục `frontend/`:
 
-2. Chạy dev server:
-   ```bash
-   npm run dev
-   ```
+```powershell
+cd frontend
+npm install
+npm run dev
+```
 
-3. Mặc định, frontend sẽ kết nối đến backend trên `http://127.0.0.1:8000` (kiểm tra `frontend/src/config.js`).
+Mặc định frontend kết nối tới backend tại `http://localhost:8000` và WebSocket tại `ws://localhost:8000`. Có thể chỉnh bằng biến môi trường Vite:
 
-4. Mở trình duyệt vào URL của Vite (thường `http://localhost:3000`).
+```powershell
+$env:VITE_API_URL="http://localhost:8000"
+$env:VITE_WS_URL="ws://localhost:8000"
+npm run dev
+```
 
-## 4. Cấu trúc project
+## 4. Cấu hình chính
 
-- `backend/`:
-  - `main.py`: API gồm endpoint models, image detect, websocket video.
-  - `detector.py`: class `WasteDetector` dùng YOLO model để infer.
-  - `settings.py`: cấu hình model map, webcam path, etc.
+Các cấu hình backend nằm trong `backend/settings.py`:
 
-- `frontend/`:
-  - `src/App.jsx`: logic chính tương tác API + hiển thị.
-  - `src/components/ModelSelector.jsx`: selector model tùy chỉnh.
-  - `src/components/VideoStream.jsx`: WebSocket video stream.
+- `WEBCAM_PATH`: nguồn webcam, mặc định là `0`.
+- `INFERENCE_DEVICE`: mặc định `auto`, tự dùng `cuda:0` nếu PyTorch thấy GPU, ngược lại dùng `cpu`.
+- `MODELS`: tự quét các file `best.pt` trong thư mục `weights/`.
 
-- `weights/`: chứa model file `YOLO26m` và `YOLO26n`.
+Có thể ép thiết bị inference bằng biến môi trường:
 
-## 5. Sử dụng
+```powershell
+$env:YOLO_DEVICE="cuda:0"  # ép dùng GPU đầu tiên
+$env:YOLO_DEVICE="cpu"     # ép dùng CPU
+```
 
-1. Mở app frontend, chọn model (YOLO26m/YOLO26n).
-2. Upload ảnh hoặc bật webcam.
-3. Xem kết quả *detections* và ảnh gắn nhãn.
+## 5. FPS
 
+FPS hiển thị trên web là FPS thực tế của pipeline stream, được đo sau khi backend đọc frame, chạy YOLO, vẽ kết quả, encode JPEG và gửi qua WebSocket. Giá trị này có thể thấp hơn FPS danh nghĩa của webcam.
 
-## 6. Hình ảnh minh họa
+Một số yếu tố ảnh hưởng FPS:
 
-Dưới đây là sơ đồ luồng hệ thống và cách các thành phần tương tác:
+- Model lớn hay nhỏ (`YOLO26n` thường nhanh hơn `YOLO26m`, `YOLO26s`, `YOLO26x`).
+- Backend đang chạy GPU hay CPU.
+- Độ phân giải webcam.
+- Thời gian vẽ annotation và encode ảnh.
+
+Câu mô tả phù hợp khi báo cáo kết quả:
+
+> Bảng dưới đây trình bày tốc độ xử lý, tính theo FPS, của các mô hình khi thử nghiệm trên máy tính cá nhân.
+
+## 6. Sử dụng
+
+1. Chạy backend trên port `8000`.
+2. Chạy frontend bằng `npm run dev`.
+3. Mở URL Vite hiển thị trong terminal.
+4. Chọn model và dùng tab live camera hoặc upload ảnh.
+5. Xem ảnh đã gắn nhãn, danh sách detection và FPS thực tế.
+
+## 7. Cấu trúc project
+
+```text
+backend/
+  main.py          API image detect và WebSocket video stream
+  detector.py      Wrapper YOLO, chọn CPU/GPU và xử lý detection
+  settings.py      Cấu hình model, webcam, device
+
+frontend/
+  src/App.jsx
+  src/components/VideoStream.jsx
+  src/components/ImageUpload.jsx
+  src/components/DetectionResults.jsx
+  src/components/ModelSelector.jsx
+
+weights/
+  YOLO26x/best.pt
+  YOLO26m/best.pt
+  YOLO26s/best.pt
+  YOLO26n/best.pt
+```
+
+## 8. Hình ảnh minh họa
 
 ![Waste Detection Architecture](./assets/waste-detection.png)
 
-## 7. Ghi chú
+## 9. Ghi chú
 
-- `weights` nặng; nếu chưa có, tải model YOLO phù hợp (hoặc tự train).
-- Đảm bảo backend được chạy khi dùng frontend.
+- Thư mục `weights/` có dung lượng lớn; nếu clone project chưa có model, cần thêm file `best.pt` tương ứng.
+- Nếu lệnh `uvicorn` bị lỗi launcher sau khi di chuyển project, dùng `python -m uvicorn main:app --reload --port 8000`.
+- Nếu `torch.cuda.is_available()` trả về `False`, backend vẫn chạy được bằng CPU nhưng FPS sẽ thấp hơn đáng kể.
